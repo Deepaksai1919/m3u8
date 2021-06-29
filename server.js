@@ -36,7 +36,7 @@ function download(params){
     let date = params.date
     let filename = params.filename
     let link = params.link
-    let subject_path = `C:\\Exams\\Gate\\${subject}\\${date}`
+    let subject_path = `~/Exams/Gate/${subject}/${date}`
     execute(`mkdir ${subject_path}`)
     let save_path = `${subject_path}/"${filename}.mp4"`
     command = `ffmpeg -i ${link} -c copy -bsf:a aac_adtstoasc ${save_path}`
