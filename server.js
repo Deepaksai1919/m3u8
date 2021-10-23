@@ -1,6 +1,7 @@
 const { exec } = require('child_process')
 const express = require('express')
 const http = require('http')
+const axios = require('axios');
 const { Server } = require('socket.io')
 
 
@@ -35,22 +36,43 @@ function download(params){
     let subject = params.subject
     let date = params.date
     let filename = params.filename
-    let link = params.link
-    let subject_path = `~/Exams/Gate/${subject}/${date}`
-    execute(`mkdir ${subject_path}`)
-    let save_path = `${subject_path}/"${filename}.mp4"`
-    command = `ffmpeg -i ${link} -c copy -bsf:a aac_adtstoasc ${save_path}`
-    execute(command)
+    let Sourceurl =  params.link
+    axios({
+        method: 'get',
+        url: Sourceurl,
+    }).then( response => {
+        data = response.data
+        source = data.match(/(https.*)\w+/g)
+        link = source[source.length - 1]
+        let subject_path = `~/Exams/Gate/${subject}/${date}`
+        execute(`mkdir ${subject_path}`)
+        let save_path = `${subject_path}/"${filename}.mp4"`
+        command = `ffmpeg -i "${link}" -c copy -bsf:a aac_adtstoasc ${save_path}`
+        execute(command, filename)
+    }).catch(error => {
+        sendError(filename);
+        console.error(error);
+    })
+    // let subject_path = `~/Exams/Gate/${subject}/${date}`
+    // execute(`mkdir ${subject_path}`)
+    // let save_path = `${subject_path}/"${filename}.mp4"`
+    // command = `ffmpeg -i ${link} -c copy -bsf:a aac_adtstoasc ${save_path}`
+    // execute(command)
 }
 
-function execute(command){
+function execute(command, file){
+    console.log('command',command)
     var process = exec(command)
     process.stdout.on('data', function(data){
-        io.emit('output', data)
+        io.emit('output', {data:data,file:file})
         console.log(data)
     })
     process.stderr.on('data', (data)=>{
-        io.emit('output', data)
+        io.emit('output', {data:data,file:file})
         console.log(data)
     })
+}
+
+function sendError(file){
+    io.emit('output',{data:'error',file:file})
 }

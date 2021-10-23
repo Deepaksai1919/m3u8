@@ -15,9 +15,10 @@
             </select><br/>
             <button ng-click='download()'>Download</button>
             <br/>
-            <div id=container>
-                <div id='output', class='output'>
-                    <p class='op'>Not yet started</p>
+            <div id='container'>
+                <div ng-repeat = 'file in files' class='output'>
+                    {{file}}
+                    <p id = '{{file}}' class='op'>Not yet started</p>
                 </div>
             </div>
             
@@ -30,8 +31,7 @@
         
         app.controller('myCtrl', function($scope){
             socket.on('output', (output)=>{
-                console.log(output)
-                document.getElementsByClassName('output')[0].innerHTML = output;
+                document.getElementById(output['file']).innerHTML = output['data'];
                 // var item = document.createElement('p')
                 // item.textContent = output
                 // output_container.appendChild(item)
@@ -42,10 +42,14 @@
                 'FM',
                 'EM',
                 'Maths',
-                'TD'
+                'TD',
+                'Production',
+                'IE'
             ];
+            $scope.files = [];
             $scope.download = function(){
                 let request = new XMLHttpRequest()
+                $scope.files.push($scope.filename)
                 let params = {
                     subject: $scope.subject,
                     link: $scope.link,
@@ -67,18 +71,21 @@
 </html>
 <style>
     div#container {
-        background-color: black;
-        color: chartreuse;
-        height: 200px;
-        position: relative;
-        top: 100px;
-        overflow-y: scroll;
         border-radius: 5px;
     }
-    div#output{
-        position: absolute;
-        overflow: auto;
+    p.op{
+        color: rgb(36, 243, 81)
+    }
+    .output{
+        display: block;
+        background-color: black;
+        color: goldenrod;
+        width: 100%;
+        height: 100px;
         top: 0;
+        margin: 1%;
+        border-radius: 5px;
+        overflow: scroll;
     }
     input[type=text], textarea {
         width: 95%;
