@@ -1,16 +1,22 @@
 document.addEventListener('DOMContentLoaded',()=>{
     chrome.tabs.executeScript({
         code: `var capture_resource = performance.getEntriesByType("resource");
-        capture_network_request = [];
+        var playlist_url = [];
+        var livestream_url = [];
         for (var i = 0; i < capture_resource.length; i++) {
-            // capture_network_request.push(capture_resource[i].initiatorType)
-            if (capture_resource[i].initiatorType == "xmlhttprequest" || capture_resource[i].initiatorType == "fetch" || capture_resource[i].initiatorType == "other") {
+            if (capture_resource[i].initiatorType == "xmlhttprequest") {
                 if (capture_resource[i].name.indexOf('playlist.m3u8') > -1) {
-                    capture_network_request.push(capture_resource[i].name)
-                    // alert(capture_resource[i].name)
+                    playlist_url.push(capture_resource[i].name);
+                    //alert(capture_resource[i].initiatorType);
+                }
+                else if (capture_resource[i].name.indexOf('https://livestreamapis.com') > -1) {
+                    livestream_url.push(capture_resource[i].name);
+                    //alert(capture_resource[i].initiatorType);
                 }
             }
         }
-        alert(capture_network_request[capture_network_request.length-1])`
+        var final_url = playlist_url.length > 0 ? playlist_url[playlist_url.length-1] : livestream_url[0]
+        alert(final_url)
+        `
     });    
 }, false)

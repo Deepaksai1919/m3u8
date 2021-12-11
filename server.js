@@ -50,7 +50,7 @@ function download(params){
         command = `ffmpeg -i "${link}" -c copy -bsf:a aac_adtstoasc ${save_path}`
         execute(command, filename)
     }).catch(error => {
-        sendError(filename);
+        sendError(filename, error);
         console.error(error);
     })
     // let subject_path = `~/Exams/Gate/${subject}/${date}`
@@ -73,6 +73,6 @@ function execute(command, file){
     })
 }
 
-function sendError(file){
-    io.emit('output',{data:'error',file:file})
+function sendError(file, error){
+    io.emit('output',{data:JSON.stringify(error),file:file})
 }
