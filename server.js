@@ -45,7 +45,8 @@ function download(params){
         data = response.data
         source = data.match(/(https.*)\w+/g)
         link = source[source.length - 1]
-        let subject_path = `~/Exams/Gate/${subject}/${subTopic}/${date}`
+        console.log('Downloading from:', link)
+        let subject_path = `~/Exams/Gate/${subject}/"${subTopic}"/${date}`
         execute(`mkdir -p ${subject_path}`)
         let save_path = `${subject_path}/"${filename}.mp4"`
         command = `ffmpeg -i "${link}" -c copy -bsf:a aac_adtstoasc ${save_path}`
@@ -62,15 +63,15 @@ function download(params){
 }
 
 function execute(command, file){
-    console.log('command',command)
+    // console.log('command',command)
     var process = exec(command)
     process.stdout.on('data', function(data){
         io.emit('output', {data:data,file:file})
-        console.log(data)
+        // console.log(data)
     })
     process.stderr.on('data', (data)=>{
         io.emit('output', {data:data,file:file})
-        console.log(data)
+        // console.log(data)
     })
 }
 
