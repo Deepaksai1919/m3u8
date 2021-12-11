@@ -9,6 +9,7 @@
         <div ng-app="myApp", ng-controller='myCtrl'>
             <p>FileName : <input type="text" ng-model="filename"></p>
             <p>m3u8 Link : <input type="text" ng-model="link"></p>
+            <p>SubTopic : <input type="text" ng-model="subTopic"></p>
             <p>Date : <input type="date" id='date'></p>
             <label for='subject'>Subject:</label>
             <select id='subject' ng-model='subject' ng-options='x for x in subject_list'>
@@ -38,6 +39,7 @@
                 // console.log(output)
             })
             $scope.subject_list = [
+                'TurboMachinery',
                 'MOS',
                 'FM',
                 'EM',
@@ -53,6 +55,7 @@
                 $scope.files.push($scope.filename)
                 let params = {
                     subject: $scope.subject,
+                    subTopic: $scope.subTopic,
                     link: $scope.link,
                     filename: $scope.filename,
                     date: document.getElementById('date').value

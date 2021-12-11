@@ -34,6 +34,7 @@ server.listen(5000, (success, error) => {
 
 function download(params){
     let subject = params.subject
+    let subTopic = params.subTopic
     let date = params.date
     let filename = params.filename
     let Sourceurl =  params.link
@@ -44,8 +45,8 @@ function download(params){
         data = response.data
         source = data.match(/(https.*)\w+/g)
         link = source[source.length - 1]
-        let subject_path = `~/Exams/Gate/${subject}/${date}`
-        execute(`mkdir ${subject_path}`)
+        let subject_path = `~/Exams/Gate/${subject}/${subTopic}/${date}`
+        execute(`mkdir -p ${subject_path}`)
         let save_path = `${subject_path}/"${filename}.mp4"`
         command = `ffmpeg -i "${link}" -c copy -bsf:a aac_adtstoasc ${save_path}`
         execute(command, filename)
