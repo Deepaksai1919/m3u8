@@ -28,15 +28,15 @@ io.on('connection',(socket) => {
     console.log('user connected')
 })
 
-server.listen(5000, (success, error) => {
+server.listen(8000, (success, error) => {
     console.log('running')
 })
 
 function download(params){
-    let subject = params.subject
+    let subject = params.subjectName
     let subTopic = params.subTopic
     let date = params.date
-    let filename = params.filename
+    let filename = params.fileName
     let Sourceurl =  params.link
     axios({
         method: 'get',
@@ -46,35 +46,44 @@ function download(params){
         source = data.match(/(https.*)\w+/g)
         link = source[source.length - 1]
         console.log('Downloading from:', link)
-        let subject_path = `~/Exams/Gate/${subject}/"${subTopic}"/${date}`
-        execute(`mkdir -p ${subject_path}`)
-        let save_path = `${subject_path}/"${filename}.mp4"`
+        let subject_path = `~/Exams/Gate/${subject}/"${subTopic}"/`
+        exec(`mkdir -p ${subject_path}`)
+        let save_path = `${subject_path}/"${filename}.${date}.mp4"`
         command = `ffmpeg -i "${link}" -c copy -bsf:a aac_adtstoasc ${save_path}`
-        execute(command, filename)
+        execute(command, filename, link)
     }).catch(error => {
         sendError(filename, error);
         console.error(error);
     })
-    // let subject_path = `~/Exams/Gate/${subject}/${date}`
-    // execute(`mkdir ${subject_path}`)
-    // let save_path = `${subject_path}/"${filename}.mp4"`
-    // command = `ffmpeg -i ${link} -c copy -bsf:a aac_adtstoasc ${save_path}`
-    // execute(command)
 }
 
-function execute(command, file){
-    // console.log('command',command)
-    var process = exec(command)
-    process.stdout.on('data', function(data){
-        io.emit('output', {data:data,file:file})
-        // console.log(data)
-    })
-    process.stderr.on('data', (data)=>{
-        io.emit('output', {data:data,file:file})
-        // console.log(data)
+function execute(command, file, link){
+    axios({
+        method: 'get',
+        url: link,
+    }).then( response => {
+        data = response.data
+        source = data.match(/(\d+.ts)/gm)
+        total_count = Number(source[source.length-1].replace('.ts',''))
+        count = 0
+        var process = exec(command)
+        // process.stdout.on('data', function(data){
+        //     count = Number(data.match(/(_\d*)/g)[0].replace('_',''))
+        //     io.emit('output', {data: `${count}/${total_count}`, file: file})
+        // })
+        process.stderr.on('data', (data)=>{
+            try{
+                count = Number(data.match(/(\d+.ts)/gm)[0].replace('.ts',''))
+            }
+            catch(e){
+
+            }
+            
+            io.emit('output', {count: count, total_count: total_count, fileName: file})
+        })
     })
 }
 
 function sendError(file, error){
-    io.emit('output',{data:JSON.stringify(error),file:file})
+    io.emit('error',{data:JSON.stringify(error),fileName:file})
 }

@@ -1,96 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <title>M3u8 stream downloader</title>
         <script src='./socket.io.js'></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     </head>
     <body>
-        <div ng-app="myApp", ng-controller='myCtrl'>
-            <p>FileName : <input type="text" ng-model="filename"></p>
-            <p>m3u8 Link : <input type="text" ng-model="link"></p>
-            <p>SubTopic : <input type="text" ng-model="subTopic"></p>
-            <p>Date : <input type="date" id='date'></p>
+        <div id='app'>
+            <p>FileName : <input type="text" v-model="fileName"></p>
+            <p>m3u8 Link : <input type="text" v-model="link"></p>
+            <p>SubTopic : <input type="text" v-model="subTopic"></p>
+            <p>Date : <input type="date" v-model = "date" id='date'></p>
             <label for='subject'>Subject:</label>
-            <select id='subject' ng-model='subject' ng-options='x for x in subject_list'>
+            <select id='subject' v-model='subjectName'>
+                <option v-for='x in subject_list' v-bind:value='x'>
+                    {{x}}
+                </option>
             </select><br/>
-            <button ng-click='download()'>Download</button>
+            <button v-on:click='download'>Download</button>
             <br/>
-            <div id='container'>
-                <div ng-repeat = 'file in files' class='output'>
-                    {{file}}
-                    <p id = '{{file}}' class='op'>Not yet started</p>
-                </div>
+            <div v-for='(value, fileName) in files'>
+                {{fileName}} : 
+                <progress max='100' :value='percent'></progress>
+                {{value.percent}}%
+                <br/>
+                {{value.count}}/{{value.total_count}}
             </div>
-            
         </div>
     </body>
     <script>
-        var app  =angular.module('myApp', [])
-        var socket = io()
-        var output_container = document.getElementById('output')
-        
-        app.controller('myCtrl', function($scope){
-            socket.on('output', (output)=>{
-                document.getElementById(output['file']).innerHTML = output['data'];
-                // var item = document.createElement('p')
-                // item.textContent = output
-                // output_container.appendChild(item)
-                // console.log(output)
-            })
-            $scope.subject_list = [
-                'TurboMachinery',
-                'MOS',
-                'FM',
-                'EM',
-                'Maths',
-                'TD',
-                'Production',
-                'IE',
-                'TOM'
-            ];
-            $scope.files = [];
-            $scope.download = function(){
-                let request = new XMLHttpRequest()
-                $scope.files.push($scope.filename)
-                let params = {
-                    subject: $scope.subject,
-                    subTopic: $scope.subTopic,
-                    link: $scope.link,
-                    filename: $scope.filename,
-                    date: document.getElementById('date').value
-                }
-                request.open('POST','/download', true)
-                request.setRequestHeader('Content-Type', 'application/json')
-                /*request.onreadystatechange = function(){
-                    if(this.readyState == 4 && this.status == 200){
-                        alert(this.responseText)
+        var app = new Vue({
+            el: '#app',
+            data: {
+                fileName: '',
+                link: '',
+                subTopic: '',
+                subjectName: '',
+                date: '',
+                subject_list: [
+                    'MD',
+                    'TOM',
+                    'TurboMachinery',
+                    'MOS',
+                    'FM',
+                    'EM',
+                    'Maths',
+                    'TD',
+                    'Production',
+                    'IE'
+                ],
+                files: {},
+            },
+            methods: {
+                download: function () {
+                    let request = new XMLHttpRequest()
+                    this.$set(this.files, this.fileName, 0)
+                    let params = {
+                        fileName: this.fileName,
+                        link: this.link,
+                        subTopic: this.subTopic,
+                        subjectName: this.subjectName,
+                        date: this.date
                     }
-                }*/
-                // console.log(params)
-                request.send(JSON.stringify(params))
+                    request.open('POST','/download', true)
+                    request.setRequestHeader('Content-Type', 'application/json')
+                    request.send(JSON.stringify(params))
+                    this.link = ''
+                }
+            },
+            mounted: function(){
+                var socket = io()
+                let app = this;
+                console.log('creating socket connection')
+                socket.on('output', (output)=>{
+                    // console.log(output)
+                    let percent = Math.round(output.count/output.total_count*100)
+                    if (!app.files.hasOwnProperty(output.fileName)){
+                        app.$set(app.files, output.fileName, {
+                            percent: 0,
+                            count: output.count,
+                            total_count: output.total_count
+                        })
+                    }
+                    app.files[output.fileName].percent = percent
+                    app.files[output.fileName].count = output.count
+                })
+                socket.on('error', (error)=>{
+                    console.error(error)
+                })
             }
-        })
+        });
     </script>
 </html>
 <style>
-    div#container {
-        border-radius: 5px;
-    }
-    p.op{
-        color: rgb(36, 243, 81)
-    }
-    .output{
-        display: block;
-        background-color: black;
-        color: goldenrod;
-        width: 100%;
-        height: 100px;
-        top: 0;
-        margin: 1%;
-        border-radius: 5px;
-        overflow: scroll;
-    }
     input[type=text], textarea {
         width: 95%;
         padding: 12px 20px;
@@ -103,13 +105,12 @@
         width: 20%;
         padding: 16px 20px;
         border-radius: 4px;
-        
     }
     button {
         float: right;
         padding: 16px 32px;
         border: 2px solid;
         border-radius: 5px;
-        background-color: #ce118f;
+        background-color: rgb(0, 153, 255);
     }
 </style>

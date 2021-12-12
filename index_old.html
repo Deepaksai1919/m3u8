@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>M3u8 stream downloader</title>
+        <script src='./socket.io.js'></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    </head>
+    <body>
+        <div ng-app="myApp", ng-controller='myCtrl'>
+            <p>FileName : <input type="text" ng-model="filename"></p>
+            <p>m3u8 Link : <input type="text" ng-model="link"></p>
+            <p>SubTopic : <input type="text" ng-model="subTopic"></p>
+            <p>Date : <input type="date" id='date'></p>
+            <label for='subject'>Subject:</label>
+            <select id='subject' ng-model='subject' ng-options='x for x in subject_list'>
+            </select><br/>
+            <button ng-click='download()'>Download</button>
+            <br/>
+            
+            <div ng-repeat = '(file, value) in files'>
+                {{file}}
+                <progress id='{{file}}' max='100' value='{{value.percent}}'></progress>
+                {{value.percent}}%
+            </div>
+            
+        </div>
+    </body>
+    <script>
+        var app  =angular.module('myApp', [])
+        var socket = io()
+        
+        app.controller('myCtrl', function($scope){
+            
+            socket.on('output', (output)=>{
+                console.log(output)
+                let percent = Math.round(output.data/output.total_count*100)
+                $scope.$apply(function(){
+                    $scope.files[output.file].percent = percent
+                })
+                // $scope.files[output['file']]['percent'] = percent;
+                if (percent == 100){
+                    delete $scope.files[output['file']]
+                }
+            })
+            $scope.subject_list = [
+                'TurboMachinery',
+                'MOS',
+                'FM',
+                'EM',
+                'Maths',
+                'TD',
+                'Production',
+                'IE',
+                'TOM'
+            ];
+            $scope.files = {};
+            $scope.download = function(){
+                let request = new XMLHttpRequest()
+                $scope.files[$scope.filename] = {
+                    percent : 0
+                };
+                let params = {
+                    subject: $scope.subject,
+                    subTopic: $scope.subTopic,
+                    link: $scope.link,
+                    filename: $scope.filename,
+                    date: document.getElementById('date').value
+                }
+                request.open('POST','/download', true)
+                request.setRequestHeader('Content-Type', 'application/json')
+                request.send(JSON.stringify(params))
+                $scope.link = ''
+            }
+        })
+    </script>
+</html>
+<style>
+    input[type=text], textarea {
+        width: 95%;
+        padding: 12px 20px;
+        margin: 8px 0;
+        box-sizing: border-box;
+        border-radius: 4px;
+        border: 2px solid;
+    }
+    select {
+        width: 20%;
+        padding: 16px 20px;
+        border-radius: 4px;
+    }
+    button {
+        float: right;
+        padding: 16px 32px;
+        border: 2px solid;
+        border-radius: 5px;
+        background-color: rgb(0, 153, 255);
+    }
+</style>
