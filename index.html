@@ -21,7 +21,7 @@
             <br/>
             <div v-for='(value, fileName) in files'>
                 {{fileName}} : 
-                <progress max='100' :value='percent'></progress>
+                <progress max='100' :value='value.percent'></progress>
                 {{value.percent}}%
                 <br/>
                 {{value.count}}/{{value.total_count}}
@@ -54,7 +54,11 @@
             methods: {
                 download: function () {
                     let request = new XMLHttpRequest()
-                    this.$set(this.files, this.fileName, 0)
+                    this.$set(this.files, this.fileName, {
+                        percent: 0,
+                        count: 0,
+                        total_count: 0
+                    })
                     let params = {
                         fileName: this.fileName,
                         link: this.link,
@@ -84,6 +88,7 @@
                     }
                     app.files[output.fileName].percent = percent
                     app.files[output.fileName].count = output.count
+                    app.files[output.fileName].total_count = output.total_count
                 })
                 socket.on('error', (error)=>{
                     console.error(error)
